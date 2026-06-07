@@ -8,12 +8,16 @@ const connection = {
 };
 
 const processJob = async (job) => {
-  console.log(`Processing job ${job.id} of type ${job.data.type}`);
+  console.log(`Processing job ${job.id} of type ${job.data.type} (attempt ${job.attemptsMade + 1})`);
 
   await pool.query(
     'UPDATE jobs SET status = $1, attempts = $2, updated_at = NOW() WHERE id = $3',
     ['processing', job.attemptsMade + 1, job.data.dbId]
   );
+
+  if (job.data.payload.simulateFailure && job.attemptsMade < 2) {
+    throw new Error('Simulated failure for testing retry logic');
+  }
 
   let result;
 
